@@ -9,4 +9,7 @@ python3 -m http.server
 ## Desktop
 ```
 cargo build
+cd target/debug
+./hello_golem
 ```
+Note: the last step depends slightly on the operating system.
