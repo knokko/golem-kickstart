@@ -1,4 +1,4 @@
-#![cfg(target_arch = "wasm32")]
+#![cfg(not(target_arch = "wasm32"))]
 
 use blinds::*;
 use golem::{
@@ -6,7 +6,6 @@ use golem::{
     Dimension::{D2, D4},
     ElementBuffer, GeometryMode, GolemError, ShaderDescription, ShaderProgram, VertexBuffer,
 };
-use wasm_bindgen::prelude::*;
 
 // The application loop, powered by the blinds crate
 async fn app(
@@ -15,7 +14,9 @@ async fn app(
     mut events: EventStream,
 ) -> Result<(), GolemError> {
     // Create a context from 'glow', GL On Whatever
-    let ctx = &Context::from_glow(glow::Context::from_webgl1_context(window.webgl_context()))?;
+    let ctx = &Context::from_glow(glow::Context::from_loader_function(|s| {
+        window.get_proc_address(s) as *const _
+    }))?;
 
     #[rustfmt::skip]
     // This is the data that represents the triangle
@@ -100,7 +101,6 @@ async fn app(
 }
 
 // Run our application!
-#[wasm_bindgen(start)]
 pub fn main() {
     run(Settings::default(), |window, events| async move {
         app(window, events).await.unwrap()
