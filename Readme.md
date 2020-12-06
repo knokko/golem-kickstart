@@ -1,4 +1,4 @@
-# Build
+# Build/run
 ## Web
 ```
 wasm-pack build --target web
@@ -8,8 +8,5 @@ python3 -m http.server
 
 ## Desktop
 ```
-cargo build
-cd target/debug
-./hello_golem
+cargo run
 ```
-Note: the last step depends slightly on the operating system.

@@ -6,6 +6,9 @@
   <body>
     <!-- Note the usage of `type=module` here as this is an ES6 module -->
     <script type="module">
+
+      
+
       // Use ES module import syntax to import functionality from the module
       // that we have compiled.
       //
@@ -13,7 +16,26 @@
       // will "boot" the module and make it ready to use. Currently browsers
       // don't support natively imported WebAssembly as an ES module, but
       // eventually the manual initialization won't be required!
-      import init from './hello_golem.js';
+      import init, { afterResize } from './hello_golem.js';
+
+      function updateCanvasSize() {
+        const maybeCanvas = document.getElementsByTagName('canvas');
+        if (maybeCanvas.length === 1) {
+
+          const theCanvas = maybeCanvas[0];
+          theCanvas.width = window.innerWidth;
+          theCanvas.height = window.innerHeight;
+
+          afterResize();
+
+        } else if (maybeCanvas.length === 0) {
+          window.setTimeout(updateCanvasSize, 500);
+        } else {
+          throw new Error("There should be at most 1 canvas!");
+        } 
+      }
+
+      window.addEventListener('resize', updateCanvasSize);
 
       async function run() {
         // First up we need to actually load the wasm file, so we use the
@@ -47,6 +69,7 @@
       }
 
       run();
+      updateCanvasSize();
     </script>
   </body>
 </html>

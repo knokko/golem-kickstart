@@ -6,9 +6,10 @@ use golem::{
 };
 
 pub(super) async fn start(
-    window: Window,
+    window: &Window,
     ctx: &Context,
     mut events: EventStream,
+    did_resize: impl Fn() -> bool
 ) -> Result<(), GolemError> {
 
     #[rustfmt::skip]
@@ -76,6 +77,44 @@ pub(super) async fn start(
     eb.set_data(&indices);
     // Prepare the shader for operations: shaders will raise errors if you forget to bind them
     shader.bind();
+    
+    draw(&window, ctx, &shader, &vb, &eb, &indices)?;
+
+    // Keep the window open and responsive until the user exits
+    loop {
+        let maybe_event = events.next_event().await;
+        if let Some(event) = maybe_event {
+
+            // The did_resize function is needed for web targets because they don't
+            // have nice resize events
+            if did_resize() {
+                let size = window.size();
+                let scale = window.scale_factor();
+                ctx.set_viewport(0, 0, (size.x * scale) as u32, (size.y * scale) as u32);
+                draw(&window, ctx, &shader, &vb, &eb, &indices)?;
+            }
+            
+            match event {
+                // This event is for desktop windows only
+                Event::Resized(resized) => {
+                    let new_size = resized.logical_size();
+                    let scale = window.scale_factor();
+                    ctx.set_viewport(0, 0, 
+                        (new_size.x * scale) as u32, (new_size.y * scale) as u32
+                    );
+                    draw(&window, ctx, &shader, &vb, &eb, &indices)?;
+                }, _other => {}
+            };
+        }
+    }
+}
+
+fn draw(
+    window: &Window, ctx: &Context,
+    shader: &ShaderProgram, vb: &VertexBuffer, 
+    eb: &ElementBuffer, indices: &[u32]
+) -> Result<(), GolemError> {
+
     // Clear the screen
     ctx.clear();
     unsafe {
@@ -85,10 +124,9 @@ pub(super) async fn start(
         // shape in graphics
         shader.draw(&vb, &eb, 0..indices.len(), GeometryMode::Triangles)?;
     }
+
     // Show our data to the window
     window.present();
-    // Keep the window open and responsive until the user exits
-    loop {
-        events.next_event().await;
-    }
+
+    Ok(())
 }

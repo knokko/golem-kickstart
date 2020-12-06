@@ -2,6 +2,7 @@
 // This file (main.rs) is only used when running this as a desktop application
 
 mod cross_platform;
+mod choose_settings;
 
 use blinds::*;
 use golem::{
@@ -21,12 +22,12 @@ async fn app(
     }))?;
 
     // Let the cross-platform code do the rest
-    cross_platform::start(window, ctx, events).await
+    cross_platform::start(&window, ctx, events, || false).await
 }
 
 // Run our desktop application!
 pub fn main() {
-    run(Settings::default(), |window, events| async move {
+    run(choose_settings::create(), |window, events| async move {
         app(window, events).await.unwrap()
     });
 }
